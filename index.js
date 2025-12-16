@@ -50,6 +50,14 @@ async function run() {
         res.send(result) 
       })
 
+      app.get('/review/:scholarshipId' , async(req,res)=>{
+        const scholarshipId = req.params.scholarshipId 
+        const review = await reviewCollection
+.find({ scholarshipId })
+.toArray();
+res.send(review);
+      })
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
