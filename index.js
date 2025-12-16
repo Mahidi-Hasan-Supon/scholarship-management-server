@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 
 // scholarship
 // YwqrE54Qyib9Z3iX
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = process.env.URI
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -34,7 +34,7 @@ async function run() {
 
        const db = client.db('scholarship') 
        const scholarshipCollection = db.collection('scholarship-db')
-       
+       const reviewCollection = db.collection('review')
 
        app.get('/scholarship' , async(req,res)=>{
         const query = req.body
@@ -42,7 +42,13 @@ async function run() {
         const result = await cursor.toArray() 
         res.send(result)
        })
-
+      
+      app.get('/scholarship/:id' , async(req,res)=>{
+        const id = req.params.id
+        const query = {_id:new ObjectId(id)}
+        const result = await scholarshipCollection.findOne(query)
+        res.send(result) 
+      })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
