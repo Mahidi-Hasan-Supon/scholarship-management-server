@@ -93,7 +93,10 @@ async function run() {
       })
 
       app.delete('/scholarship/:id', async (req, res) => {
-   res.send(await scholarships.deleteOne({ _id: new ObjectId(req.params.id) }));
+        const id = req.params.id
+        const query = {_id: new ObjectId(id)}
+        const result = await scholarships.deleteOne(query)
+        res.send(result);
     });
 
       // reviews
