@@ -68,6 +68,13 @@ res.send(await users.updateOne(
 
 
        // scholarship
+
+       app.post('/scholarship', async (req, res) => {
+res.send(await scholarships.insertOne(req.body));
+});
+
+
+
        app.get('/scholarship' , async(req,res)=>{
         const {limit , skip} = req.query
         const cursor = scholarshipCollection.find().limit(Number(limit)).skip(Number(skip)) 
