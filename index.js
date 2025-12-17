@@ -41,28 +41,28 @@ async function run() {
        
 
        // ===== USERS =====
-app.post('/users', async (req, res) => {
-const user = req.body;
-const exists = await users.findOne({ email: user.email });
-if (exists) return res.send({ message: 'user exists' });
-user.role = 'student';
-res.send(await users.insertOne(user));
-});
+            app.post('/users', async (req, res) => {
+        const user = req.body;
+         const exists = await users.findOne({ email: user.email });
+        if (exists) return res.send({ message: 'user exists' });
+         user.role = 'student';
+           res.send(await users.insertOne(user));
+        });
 
 
-app.get('/users/role/:email', async (req, res) => {
-const user = await users.findOne({ email: req.params.email });
-res.send({ role: user?.role || 'student' });
-});
+           app.get('/users/role/:email', async (req, res) => {
+          const user = await users.findOne({ email: req.params.email });
+            res.send({ role: user?.role || 'student' });
+              });
 
 
-app.patch('/users/role/:id', async (req, res) => {
-const { role } = req.body;
-res.send(await users.updateOne(
-{ _id: new ObjectId(req.params.id) },
-{ $set: { role } }
-));
-});
+       app.patch('/users/role/:id', async (req, res) => {
+        const { role } = req.body;
+          res.send(await users.updateOne(
+            { _id: new ObjectId(req.params.id) },
+         { $set: { role } }
+             ));
+                  });
 
 
 
@@ -70,8 +70,10 @@ res.send(await users.updateOne(
        // scholarship
 
        app.post('/scholarship', async (req, res) => {
-res.send(await scholarships.insertOne(req.body));
-});
+        const query = req.body
+        const result = await scholarships.insertOne(query)
+         res.send(result);
+        });
 
 
 
@@ -90,12 +92,17 @@ res.send(await scholarships.insertOne(req.body));
         res.send(result) 
       })
 
+      app.delete('/scholarship/:id', async (req, res) => {
+   res.send(await scholarships.deleteOne({ _id: new ObjectId(req.params.id) }));
+    });
+
+      // reviews
       app.get('/review/:scholarshipId' , async(req,res)=>{
         const scholarshipId = req.params.scholarshipId 
         const review = await reviewCollection
-.find({ scholarshipId })
-.toArray();
-res.send(review);
+     .find({ scholarshipId })
+      .toArray();
+      res.send(review);
       })
 
     await client.db("admin").command({ ping: 1 });
