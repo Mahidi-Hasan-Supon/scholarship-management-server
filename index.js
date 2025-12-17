@@ -127,7 +127,14 @@ async function run() {
         ));
         });
 
-
+   app.patch('/applications/status/:id', async (req, res) => {
+const { status } = req.body;
+const result = await applications.updateOne(
+{ _id: new ObjectId(req.params.id) },
+{ $set: { status } }
+);
+res.send(result);
+});
 
 
 
