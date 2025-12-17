@@ -37,10 +37,11 @@ async function run() {
        const reviewCollection = db.collection('review')
 
        app.get('/scholarship' , async(req,res)=>{
-        const query = req.body
-        const cursor = scholarshipCollection.find() 
+        const {limit , skip} = req.query
+        const cursor = scholarshipCollection.find().limit(Number(limit)).skip(Number(skip)) 
         const result = await cursor.toArray() 
-        res.send(result)
+        const count =await scholarshipCollection.countDocuments()
+        res.send({result  , count} )
        })
       
       app.get('/scholarship/:id' , async(req,res)=>{
