@@ -99,14 +99,57 @@ async function run() {
         res.send(result);
     });
 
+
+    // ===== APPLICATIONS =====
+      app.post('/applications', async (req, res) => {
+        const body = req.body
+        const result = await applications.insertOne(body)
+       res.send(result);
+         });
+
+
+      app.get('/applications', async (req, res) => {
+        const result = await applications.find().toArray()
+        res.send(result);
+         });
+
+
+        app.get('/applications/user/:email', async (req, res) => {
+        res.send(await applications.find({ userEmail: req.params.email }).toArray());
+          });
+
+
+          app.patch('/applications/status/:id', async (req, res) => {
+      const { status } = req.body;
+        res.send(await applications.updateOne(
+         { _id: new ObjectId(req.params.id) },
+       { $set: { status } }
+        ));
+        });
+
+
+
+
+
       // reviews
-      app.get('/review/:scholarshipId' , async(req,res)=>{
-        const scholarshipId = req.params.scholarshipId 
-        const review = await reviewCollection
-     .find({ scholarshipId })
-      .toArray();
-      res.send(review);
-      })
+    //   app.get('/review/:scholarshipId' , async(req,res)=>{
+    //     const scholarshipId = req.params.scholarshipId 
+    //     const review = await reviewCollection
+    //  .find({ scholarshipId })
+    //   .toArray();
+    //   res.send(review);
+    //   })
+    app.post('/reviews', async (req, res) => {
+      const body = req.body 
+      const result = await reviewCollection.insertOne(body)
+      res.send(result);
+        });
+
+
+     app.get('/reviews/:email', async (req, res) => {
+       res.send(await reviews.find({ userEmail: req.params.email }).toArray());
+         });
+
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
