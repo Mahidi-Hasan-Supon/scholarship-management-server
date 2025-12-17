@@ -34,8 +34,40 @@ async function run() {
 
        const db = client.db('scholarship') 
        const scholarshipCollection = db.collection('scholarship-db')
-       const reviewCollection = db.collection('review')
+       const reviewCollection = db.collection('reviews')
+       const users = db.collection('users');
+       const applications = db.collection('applications');
 
+       
+
+       // ===== USERS =====
+app.post('/users', async (req, res) => {
+const user = req.body;
+const exists = await users.findOne({ email: user.email });
+if (exists) return res.send({ message: 'user exists' });
+user.role = 'student';
+res.send(await users.insertOne(user));
+});
+
+
+app.get('/users/role/:email', async (req, res) => {
+const user = await users.findOne({ email: req.params.email });
+res.send({ role: user?.role || 'student' });
+});
+
+
+app.patch('/users/role/:id', async (req, res) => {
+const { role } = req.body;
+res.send(await users.updateOne(
+{ _id: new ObjectId(req.params.id) },
+{ $set: { role } }
+));
+});
+
+
+
+
+       // scholarship
        app.get('/scholarship' , async(req,res)=>{
         const {limit , skip} = req.query
         const cursor = scholarshipCollection.find().limit(Number(limit)).skip(Number(skip)) 
