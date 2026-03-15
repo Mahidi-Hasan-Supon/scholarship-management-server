@@ -1,6 +1,7 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
-require('dotenv').config()
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express()
 app.use(cors())
 const port = process.env.PORT || 5000
@@ -34,48 +35,50 @@ async function run() {
 
        const db = client.db('scholarship') 
        const scholarshipCollection = db.collection('scholarship-db')
-       const reviewCollection = db.collection('reviews')
-       const users = db.collection('users');
-       const applications = db.collection('applications');
+      //  const reviewCollection = db.collection('reviews')
+      //  const users = db.collection('users');
+      //  const applications = db.collection('applications');
 
        
 
        // ===== USERS =====
-            app.post('/users', async (req, res) => {
-        const user = req.body;
-         const exists = await users.findOne({ email: user.email });
-        if (exists) return res.send({ message: 'user exists' });
-         user.role = 'student';
-           res.send(await users.insertOne(user));
-        });
+      //       app.post('/users', async (req, res) => {
+      //   const user = req.body;
+      //    const exists = await users.findOne({ email: user.email });
+      //   if (exists) return res.send({ message: 'user exists' });
+      //    user.role = 'student';
+      //      res.send(await users.insertOne(user));
+      //   });
 
 
-           app.get('/users/role/:email', async (req, res) => {
-          const user = await users.findOne({ email: req.params.email });
-            res.send({ role: user?.role || 'student' });
-              });
+      //      app.get('/users/role/:email', async (req, res) => {
+      //     const user = await users.findOne({ email: req.params.email });
+      //       res.send({ role: user?.role || 'student' });
+      //         });
 
 
-       app.patch('/users/role/:id', async (req, res) => {
-        const { role } = req.body;
-          res.send(await users.updateOne(
-            { _id: new ObjectId(req.params.id) },
-         { $set: { role } }
-             ));
-                  });
+      //  app.patch('/users/role/:id', async (req, res) => {
+      //   const { role } = req.body;
+      //     res.send(await users.updateOne(
+      //       { _id: new ObjectId(req.params.id) },
+      //    { $set: { role } }
+      //        ));
+      //             });
 
 
 
 
        // scholarship
 
-       app.post('/scholarship', async (req, res) => {
-        const query = req.body
-        const result = await scholarships.insertOne(query)
-         res.send(result);
-        });
+      //  app.post('/scholarship', async (req, res) => {
+      //   const query = req.body
+      //   const result = await scholarships.insertOne(query)
+      //    res.send(result);
+      //   });
 
 
+
+      // ===scholarship====
 
        app.get('/scholarship' , async(req,res)=>{
         const {limit , skip} = req.query
@@ -92,70 +95,96 @@ async function run() {
         res.send(result) 
       })
 
-      app.delete('/scholarship/:id', async (req, res) => {
-        const id = req.params.id
-        const query = {_id: new ObjectId(id)}
-        const result = await scholarships.deleteOne(query)
-        res.send(result);
-    });
+    //   app.delete('/scholarship/:id', async (req, res) => {
+    //     const id = req.params.id
+    //     const query = {_id: new ObjectId(id)}
+    //     const result = await scholarships.deleteOne(query)
+    //     res.send(result);
+    // });
+
+// paymentInfo stripe 
+app.post('/create-checkout-session', async (req, res) => {
+  const paymentInfo = req.body
+  console.log(paymentInfo)
+  res.send(paymentInfo)
+  // const session = await stripe.checkout.sessions.create({
+  //   line_items: [
+  //     {
+  //       // Provide the exact Price ID (for example, price_1234) of the product you want to sell
+  //       price: '{{PRICE_ID}}',
+  //       quantity: 1,
+  //     },
+  //   ],
+  //   mode: 'payment',
+
+  // });
 
 
-    // ===== APPLICATIONS =====
-      app.post('/applications', async (req, res) => {
-        const body = req.body
-        const result = await applications.insertOne(body)
-       res.send(result);
-         });
-
-
-      app.get('/applications', async (req, res) => {
-        const result = await applications.find().toArray()
-        res.send(result);
-         });
-
-
-        app.get('/applications/user/:email', async (req, res) => {
-        res.send(await applications.find({ userEmail: req.params.email }).toArray());
-          });
-
-
-          app.patch('/applications/status/:id', async (req, res) => {
-      const { status } = req.body;
-        res.send(await applications.updateOne(
-         { _id: new ObjectId(req.params.id) },
-       { $set: { status } }
-        ));
-        });
-
-   app.patch('/applications/status/:id', async (req, res) => {
-const { status } = req.body;
-const result = await applications.updateOne(
-{ _id: new ObjectId(req.params.id) },
-{ $set: { status } }
-);
-res.send(result);
 });
 
 
 
+
+
+
+
+
+    // ===== APPLICATIONS =====
+//       app.post('/applications', async (req, res) => {
+//         const body = req.body
+//         const result = await applications.insertOne(body)
+//        res.send(result);
+//          });
+
+
+//       app.get('/applications', async (req, res) => {
+//         const result = await applications.find().toArray()
+//         res.send(result);
+//          });
+
+
+//         app.get('/applications/user/:email', async (req, res) => {
+//         res.send(await applications.find({ userEmail: req.params.email }).toArray());
+//           });
+
+
+//           app.patch('/applications/status/:id', async (req, res) => {
+//       const { status } = req.body;
+//         res.send(await applications.updateOne(
+//          { _id: new ObjectId(req.params.id) },
+//        { $set: { status } }
+//         ));
+//         });
+
+//    app.patch('/applications/status/:id', async (req, res) => {
+// const { status } = req.body;
+// const result = await applications.updateOne(
+// { _id: new ObjectId(req.params.id) },
+// { $set: { status } }
+// );
+// res.send(result);
+// });
+
+
+
       // reviews
-    //   app.get('/review/:scholarshipId' , async(req,res)=>{
+    //   app.get('/reviews/:scholarshipId' , async(req,res)=>{
     //     const scholarshipId = req.params.scholarshipId 
     //     const review = await reviewCollection
     //  .find({ scholarshipId })
     //   .toArray();
     //   res.send(review);
     //   })
-    app.post('/reviews', async (req, res) => {
-      const body = req.body 
-      const result = await reviewCollection.insertOne(body)
-      res.send(result);
-        });
+    // app.post('/reviews', async (req, res) => {
+    //   const body = req.body 
+    //   const result = await reviewCollection.insertOne(body)
+    //   res.send(result);
+    //     });
 
 
-     app.get('/reviews/:email', async (req, res) => {
-       res.send(await reviews.find({ userEmail: req.params.email }).toArray());
-         });
+    //  app.get('/reviews/:email', async (req, res) => {
+    //    res.send(await reviews.find({ userEmail: req.params.email }).toArray());
+    //      });
 
 
     await client.db("admin").command({ ping: 1 });
