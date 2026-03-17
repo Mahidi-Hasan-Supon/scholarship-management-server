@@ -107,17 +107,26 @@ app.post('/create-checkout-session', async (req, res) => {
   const paymentInfo = req.body
   console.log(paymentInfo)
   res.send(paymentInfo)
-  // const session = await stripe.checkout.sessions.create({
-  //   line_items: [
-  //     {
-  //       // Provide the exact Price ID (for example, price_1234) of the product you want to sell
-  //       price: '{{PRICE_ID}}',
-  //       quantity: 1,
-  //     },
-  //   ],
-  //   mode: 'payment',
+  const session = await stripe.checkout.sessions.create({
+    line_items: [
+      {
+        // Provide the exact Price ID (for example, price_1234) of the product you want to sell
+        price_data: {
+          currency:'usd',
+          product_data:{
+            name:paymentInfo?.name,
+            description:paymentInfo?.description,
+            images:[paymentInfo?.image]
+          }
+          
+        },
+        quantity: 1,
+      },
+    ],
+    student_email:paymentInfo?.studentInfo?.email,
+    mode: 'payment',
 
-  // });
+  });
 
 
 });
