@@ -3,7 +3,11 @@ const express = require('express')
 const cors = require('cors')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express()
-app.use(cors())
+app.use(cors(
+{
+  origin: [process.env.CLIENT_DOMAIN],
+  }
+))
 const port = process.env.PORT || 5000
 app.use(express.json())
 
@@ -106,7 +110,7 @@ async function run() {
 app.post('/create-checkout-session', async (req, res) => {
   const paymentInfo = req.body
   console.log(paymentInfo)
-  res.send(paymentInfo)
+  // res.send(paymentInfo)
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
@@ -114,23 +118,34 @@ app.post('/create-checkout-session', async (req, res) => {
         price_data: {
           currency:'usd',
           product_data:{
-            name:paymentInfo?.name,
+            name:paymentInfo?.scholarshipName,
             description:paymentInfo?.description,
-            images:[paymentInfo?.image]
-          }
-          
+            images:[paymentInfo?.universityImage]
+          },
+          unit_amount:paymentInfo?.applicationFee * 100,
         },
         quantity: 1,
       },
     ],
-    student_email:paymentInfo?.studentInfo?.email,
+    customer_email:paymentInfo?.studentInfo.email,
     mode: 'payment',
+    metadata:{
+      scholarshipId:paymentInfo?.scholarshipId , 
+       studentEmail: paymentInfo.studentInfo.email,
+    },
+    success_url:`${process.env.CLIENT_DOMAIN}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:`${process.env.CLIENT_DOMAIN}/cardDetails/${paymentInfo?.scholarshipId}`
 
   });
-
+  res.send({url:session.url})
 
 });
 
+app.post('/success-payment' , async (req,res)=>{
+  const {sessionId} = req.body
+   const session = await stripe.checkout.sessions.retrieve(sessionId);
+   console.log(session);
+})
 
 
 
