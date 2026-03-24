@@ -35,7 +35,6 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
 
        const db = client.db('scholarship') 
        const scholarshipCollection = db.collection('scholarship-db')
@@ -73,16 +72,14 @@ async function run() {
 
 
        // scholarship
+       // ===scholarship====
 
-      //  app.post('/scholarship', async (req, res) => {
-      //   const query = req.body
-      //   const result = await scholarships.insertOne(query)
-      //    res.send(result);
-      //   });
+       app.post('/scholarship', async (req, res) => {
+        const scholarshipData = req.body
+        const result = await scholarshipCollection.insertOne(scholarshipData)
+         res.send(result);
+        });
 
-
-
-      // ===scholarship====
 
        app.get('/scholarship' , async(req,res)=>{
         const {limit , skip} = req.query
@@ -145,6 +142,13 @@ app.post('/success-payment' , async (req,res)=>{
   const {sessionId} = req.body
    const session = await stripe.checkout.sessions.retrieve(sessionId);
    console.log(session);
+   const scholarship = await scholarshipCollection.findOne({_id:new ObjectId(session.metadata.scholarshipId)})
+   if(session.status === 'complete'){
+    //  save scholarship data in db
+    const scholarshipInfo={
+      scholarshipId:session.metadata.scholarshipId
+    }
+   }
 })
 
 
