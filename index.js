@@ -39,7 +39,7 @@ async function run() {
        const db = client.db('scholarship') 
        const scholarshipCollection = db.collection('scholarship-db')
       //  const reviewCollection = db.collection('reviews')
-      //  const users = db.collection('users');
+       const usersCollection = db.collection('users');
       //  const applications = db.collection('applications');
 
        
@@ -52,12 +52,38 @@ async function run() {
       //    user.role = 'student';
       //      res.send(await users.insertOne(user));
       //   });
+ // user update or post data
+  app.post('/user', async(req,res)=>{
+    const userData = req.body 
 
-
-      //      app.get('/users/role/:email', async (req, res) => {
-      //     const user = await users.findOne({ email: req.params.email });
-      //       res.send({ role: user?.role || 'student' });
-      //         });
+    // user role set
+    userData.created_at = new Date().toISOString()
+    userData.last_loggedIn = new Date().toISOString()
+    // role inisially 
+    userData.role = 'student'
+    const query = {
+      email: userData.email
+    }
+    // userexisting 
+    const alreadyExisting = await usersCollection.findOne(query)
+    console.log('user already exist' , !!alreadyExisting)
+     if(alreadyExisting){
+      console.log('uploading user data');
+      const result = await usersCollection.updateOne(query,{$set:{
+        last_loggedIn:new Date().toISOString()
+      }})
+      return res.send(result)
+     }
+     
+     console.log('saving new user data');
+    const result = await usersCollection.insertOne(userData)
+    res.send(result)
+  })
+     // users get
+    app.get('/users/role/:email', async (req, res) => {
+    const user = await usersCollection.findOne({ email: req.params.email });
+    res.send({ role: user?.role});
+       });
 
 
       //  app.patch('/users/role/:id', async (req, res) => {
@@ -73,14 +99,14 @@ async function run() {
 
        // scholarship
        // ===scholarship====
-
+    //  add scholarship
        app.post('/scholarship', async (req, res) => {
         const scholarshipData = req.body
         const result = await scholarshipCollection.insertOne(scholarshipData)
          res.send(result);
         });
 
-
+// all scholarship
        app.get('/scholarship' , async(req,res)=>{
         const {limit , skip} = req.query
         const cursor = scholarshipCollection.find().limit(Number(limit)).skip(Number(skip)) 
@@ -88,7 +114,7 @@ async function run() {
         const count =await scholarshipCollection.countDocuments()
         res.send({result  , count} )
        })
-      
+      // details scholarship
       app.get('/scholarship/:id' , async(req,res)=>{
         const id = req.params.id
         const query = {_id:new ObjectId(id)}
@@ -116,10 +142,9 @@ app.post('/create-checkout-session', async (req, res) => {
           currency:'usd',
           product_data:{
             name:paymentInfo?.scholarshipName,
-            description:paymentInfo?.description,
             images:[paymentInfo?.universityImage]
           },
-          unit_amount:paymentInfo?.applicationFee * 100,
+          unit_amount:paymentInfo?.tuitionFees * 100,
         },
         quantity: 1,
       },
@@ -131,25 +156,53 @@ app.post('/create-checkout-session', async (req, res) => {
        studentEmail: paymentInfo.studentInfo.email,
     },
     success_url:`${process.env.CLIENT_DOMAIN}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url:`${process.env.CLIENT_DOMAIN}/cardDetails/${paymentInfo?.scholarshipId}`
+    cancel_url:`${process.env.CLIENT_DOMAIN}/canceled-payment/${paymentInfo?.scholarshipId}`
+    // cancel_url:`${process.env.CLIENT_DOMAIN}/cardDetails/${paymentInfo?.scholarshipId}`
 
   });
   res.send({url:session.url})
 
 });
 
-app.post('/success-payment' , async (req,res)=>{
+app.patch('/success-payment' , async (req,res)=>{
   const {sessionId} = req.body
    const session = await stripe.checkout.sessions.retrieve(sessionId);
-   console.log(session);
-   const scholarship = await scholarshipCollection.findOne({_id:new ObjectId(session.metadata.scholarshipId)})
-   if(session.status === 'complete'){
+   console.log('session retrieve',session);
+  //  const scholarship = await scholarshipCollection.findOne({_id:new ObjectId(session.metadata.scholarshipId)})
+   if(session.payment_status === 'paid'){
+    //  save scholarship data in db
+    // const scholarshipInfo={
+    //   scholarshipId:session.metadata.scholarshipId
+    // }
+    const id = session.metadata.scholarshipId
+    const query = {_id:new ObjectId(id)}
+    const update = {
+      $set:{
+        paymentStatus:'paid'
+      }
+    }
+    const result = await scholarshipCollection.updateOne(query , update)
+    
     //  save scholarship data in db
     const scholarshipInfo={
-      scholarshipId:session.metadata.scholarshipId
+      scholarshipId:session.metadata.scholarshipId,
+      transactionId: session.payment_intent ,
+      // customer: session.metadata.customer ,
+      // status: 'pending',
+      // // seller: plant.seller ,
+      // name: scholarshipInfo.name, 
+      // category:plant.category , 
+      // quantity: 1 ,
+      // price: session.amount_total / 100,
+      // image: plant?.image
     }
-   }
+    
+    res.send(result) 
+  }
+   res.send({success:false})
 })
+
+
 
 
 
