@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "student-scholarship-63d16",
+  "private_key_id": "dfe7d6391347e8608da29490dee55f60b6143ed7",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDM0pX4VeSg2VMX\nWvO5r2JOxF/kgS1WXcje1gWoOW26mjU62itKmqYx3tlR1NsxI06vcCr57r6rQfIh\nBj3raBqPgxO0VWEX+IvhQiYXp3pNxYg7oMNS0D7ZICd4Recz7ANHug4hjvDm9A4p\nqkGygRf1dbrf41ZWcDsOizwPDbwpKe5iyRSjXMT+upgJv6LTFhCji8Ux2qw/a6mN\n8NRnyy5svYd54yGxWS2DmINXNd2DiZgqvNv70FTGmwirI3K1M2YtZA2gH8o81Zry\nJooa4jvCjxlU30G7u6PsNBQuHXGUTQ5ostDchps2C0hySiXDSn/l1FBarZvKmYSG\n0ch/+AQ5AgMBAAECggEAAYJtlJUGQL9CqlIxKA1E36bBj68V5qhsvWlU7CVSNBUP\ntLxcmJkJwxrIrRNl8F0KSGGEQSGG0GZQuaqwk7goLgqPI5WJoR0xmyYtVkcjfeyb\nhtgD8/mauJ81CCERwWKxjqtBzXgN/Hi0Wfj5c/8vc8n3XK5/rQMUUWKcXuKu0k4A\nfpyI9PLShkXOIh1khsUVi5HFXyweVXfHDjiD/j4O7LSsUbpuGEZuFnCDF9afmDfV\n/tT24QY9xnaYabzvoKIegz47YYF+dB+46VygbGCSEd0uKfaiaVwEqQkZoRvQ+5d9\nJwNMCSdW6FYGaLhn2qX798B09/4Tw73O4S1G56LbtQKBgQD5VAqS4nu+PkMqVRWR\nYP4bAzFWr48zZI+fLIEx4+sO+xBI+mVQKARtRgEPluYCjGTL/8C77x5R5gcx431z\nPE2MY9GxevJ8GPAbvKILeXhe0RMV0081QGsGWmnrnHgltgNA+WxoZyBWAsIHAohk\nyQWIw2m5rGVplQAOxVX5ObgJhQKBgQDSTat8x1nF297o3wkxFiqew38HgtMB4s2F\neFVzsH3wG69LHBllbYOjrqYb0+l9qPLrPFSF6fvMOLfJE2hpoFu2HiTBjhSPKYwT\nTv8ZEFfmGo/YqJkhn3UtYyKyLLEWU3yS0DMrKBBGTj58FpitWuPhB79LUm31CmdQ\nQhhJjPNUJQKBgFj7Gk7zj1AE7nmEJg9dOzKuwAP84bFouS0IeA8zFSeiiFxTKKcj\nsPjCnAxRQUM1kZ+QZdtsaji2TGkMlC/1HIP299ZMV4/cYoyzlG1d64yDNzl50XHi\nzI9W4yhYDjT/MUgV/A+ChnLLxy0zRTQa3ePCQdAm64Zzy7J50MYCSGD1AoGBAKyd\nU8R3XBgrACvj5YeEyjbF/94KY2eI4WhL/NeYZcZO8vKTfcTivsn68BynM18Q7VJn\nknjYNPTLGQ7R/0GzfZNd6o10MSvQzkiK7peD8qHL64XJ3ObcGzHFzRSx2iiZHgbj\nHRyvJayPTHpNkcO4dpKd6UXJwrb+cw5NMeIs7wyBAoGAJaUMrSG/NDt8sQNuwet1\nsv7tGHVz9wK9aNgm+X1CmlEVGjUqDH7nRJICOuV/5hN6TJPxi+6xHdkzXt571nYO\nTLT3JX5THWQZ2M56ewER/T8icnuo8Qe5kwAu0yOd/IZyXBUeb9w03diGlAr8wVjq\ngXvsuRA/9/ZcKwO5f0hGwwU=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@student-scholarship-63d16.iam.gserviceaccount.com",
+  "client_id": "116270662263299252315",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40student-scholarship-63d16.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
