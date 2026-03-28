@@ -202,9 +202,8 @@ app.post('/create-checkout-session', async (req, res) => {
        studentEmail: paymentInfo?.studentInfo.email,
     },
     success_url:`${process.env.CLIENT_DOMAIN}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
-    // cancel_url:`${process.env.CLIENT_DOMAIN}/cardDetails/${paymentInfo?.scholarshipId}`
-    cancel_url:`${process.env.CLIENT_DOMAIN}/canceled-payment`
-
+    // cancel_url:`${process.env.CLIENT_DOMAIN}/cardDetails/${paymentInfo?.scholarshipId}&scholarshipName=${paymentInfo?.scholarshipName}`
+    cancel_url:`${process.env.CLIENT_DOMAIN}/canceled-payment?scholarshipId=${paymentInfo?.scholarshipId}&scholarshipName=${paymentInfo?.scholarshipName}`
   });
   res.send({url:session.url})
 
@@ -262,7 +261,19 @@ app.post('/success-payment' , async (req,res)=>{
   return res.send({success:false})
 })
 
-
+// payment failed
+app.post('/canceled-payment', async (req,res)=>{
+  const {scholarshipId,studentEmail,scholarshipName} = req.body 
+  const applicationInfo = {
+    scholarshipName,
+    scholarshipId,
+    studentEmail ,
+    payment_status:'unpaid',
+    appliedAt:new Date()
+  }
+  await applicationsCollection.insertOne(applicationInfo) 
+  res.send({success:true})
+})
 
 
 
