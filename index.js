@@ -89,7 +89,7 @@ async function run() {
  // user update or post data
   app.post('/user', async(req,res)=>{
     const userData = req.body 
-
+    console.log(userData);
     // user role set
     userData.created_at = new Date().toISOString()
     userData.last_loggedIn = new Date().toISOString()
@@ -116,7 +116,7 @@ async function run() {
 
   // all users get in client
   // 1st sob gula users dekhanor jonno eta korsi
-    app.get('/users' ,verifyFbToken , async(req , res)=>{
+    app.get('/users'  , async(req , res)=>{
   
       const result = await usersCollection.find().toArray()
       res.send(result)
@@ -166,12 +166,29 @@ async function run() {
         res.send(result) 
       })
 
-    //   app.delete('/scholarship/:id', async (req, res) => {
-    //     const id = req.params.id
-    //     const query = {_id: new ObjectId(id)}
-    //     const result = await scholarships.deleteOne(query)
-    //     res.send(result);
-    // });
+      // manage scholarship 
+      app.get('/manage-scholarship'  ,verifyFbToken, async(req,res)=>{
+        const email = req.body 
+        const result = await scholarshipCollection.find().toArray()
+        res.send(result)
+      })
+      // manage scholarship 
+      app.patch('/scholarship/:id',async(req,res)=>{
+        const id = req.params.id 
+        const query = {_id:new ObjectId(id)}
+        const updateData = req.body 
+        delete updateData._id
+        const update = {$set:updateData}
+        const result = await scholarshipCollection.updateOne(query , update)
+        res.send(result)
+      } )
+      // manage scholarship 
+      app.delete('/scholarship/:id', async (req, res) => {
+        const id = req.params.id
+        const query = {_id: new ObjectId(id)}
+        const result = await scholarshipCollection.deleteOne(query)
+        res.send(result);
+    });
 
 // paymentInfo stripe 
 app.post('/create-checkout-session', async (req, res) => {
