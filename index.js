@@ -26,7 +26,7 @@ admin.initializeApp({
 // firebase jwttoken 
 
 const verifyFbToken =async (req,res,next)=>{
-      console.log('headers in the middleware',req.headers.authorization);
+      // console.log('headers in the middleware',req.headers.authorization);
       const token = req.headers.authorization
       if(!token){
         return res.status(401).send({message:'unauthorized message'})
@@ -71,11 +71,11 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
 
        const db = client.db('scholarship') 
-       const scholarshipCollection = db.collection('scholarship-db')
-      //  const reviewCollection = db.collection('reviews')
+       const scholarshipCollection = db.collection('scholarships')
        const usersCollection = db.collection('users');
        const applicationsCollection = db.collection('applications');
-
+       const reviewsCollection = db.collection('reviews')
+       
        
 
        // ===== USERS =====
@@ -192,7 +192,8 @@ async function run() {
 
 // paymentInfo stripe 
 app.post('/create-checkout-session', async (req, res) => {
-  const paymentInfo = req.body
+ try{
+   const paymentInfo = req.body
   console.log(paymentInfo)
   // res.send(paymentInfo)
   const session = await stripe.checkout.sessions.create({
@@ -205,7 +206,7 @@ app.post('/create-checkout-session', async (req, res) => {
             name:paymentInfo?.scholarshipName,
             images:[paymentInfo?.universityImage]
           },
-          unit_amount:paymentInfo?.tuitionFees * 100,
+          unit_amount:paymentInfo?.applicationFees * 100,
         },
         quantity: 1,
       },
@@ -217,32 +218,52 @@ app.post('/create-checkout-session', async (req, res) => {
   universityName: paymentInfo?.universityName,
       scholarshipId:paymentInfo?.scholarshipId , 
        studentEmail: paymentInfo?.studentInfo.email,
+       studentName: paymentInfo?.studentInfo.name,
     },
     success_url:`${process.env.CLIENT_DOMAIN}/success-payment?session_id={CHECKOUT_SESSION_ID}`,
     // cancel_url:`${process.env.CLIENT_DOMAIN}/cardDetails/${paymentInfo?.scholarshipId}&scholarshipName=${paymentInfo?.scholarshipName}`
-    cancel_url:`${process.env.CLIENT_DOMAIN}/canceled-payment?scholarshipId=${paymentInfo?.scholarshipId}&scholarshipName=${paymentInfo?.scholarshipName}`
+    // cancel_url:`${process.env.CLIENT_DOMAIN}/canceled-payment?scholarshipId=${paymentInfo?.scholarshipId}&scholarshipName=${paymentInfo?.scholarshipName}`
+    cancel_url: `${process.env.CLIENT_DOMAIN}/canceled-payment?scholarshipId=${paymentInfo?.scholarshipId}`
   });
   res.send({url:session.url})
+ }catch(err){
+  return res.status(500).send({message:'error create an checkout session',err:err.message})
+ }
 
 });
 
 app.post('/success-payment' , async (req,res)=>{
   const {sessionId} = req.body
    const session = await stripe.checkout.sessions.retrieve(sessionId);
+   const scholarshipId = session.metadata.scholarshipId
    console.log('session retrieve',session);
+   const scholarship = await scholarshipCollection.findOne({_id:new ObjectId(scholarshipId)})
+     const user = await usersCollection.findOne({email:session.metadata.studentEmail})
+      const application = await applicationsCollection.findOne({transactionId: session.payment_intent})
   //  const scholarship = await scholarshipCollection.findOne({_id:new ObjectId(session.metadata.scholarshipId)})
-   if(session.payment_status === 'paid'){
+   if(session.payment_status === 'paid' && !application){
     // save applications data in db
     const applicationInfo = {
       universityName:session.metadata.universityName,
       scholarshipName:session.metadata.scholarshipName,
-      scholarshipId:session.metadata.scholarshipId,
+      scholarshipId,
+      userId:user?._id,
       amount:session.amount_total / 100 ,
       studentEmail:session.metadata.studentEmail,
+      studentName:session.metadata.studentName,
       transactionId:session.payment_intent,
+      scholarshipCategory:scholarship.scholarshipCategory,
+      subjectCategory:scholarship.subjectCategory,
+      universityCity:scholarship.universityCity ,
+      universityCountry:scholarship.universityCountry,
+      degree:scholarship.degree,
+      serviceCharge:scholarship.serviceCharge,
+      applicationStatus:'pending',
       payment_status:'paid',
-      appliedAt:new Date()
+      appliedAt:new Date() ,
+      feedback:"",
     }
+//   feedback (added by moderator).
     await applicationsCollection.insertOne(applicationInfo)
    return res.send({success:true,data:applicationInfo})
     //  save scholarship data in db
@@ -280,82 +301,128 @@ app.post('/success-payment' , async (req,res)=>{
 
 // payment failed
 app.post('/canceled-payment', async (req,res)=>{
-  const {scholarshipId,studentEmail,scholarshipName} = req.body 
-  const applicationInfo = {
-    scholarshipName,
+
+  const {scholarshipId,studentEmail,studentName , sessionId} = req.body 
+  const scholarship = await scholarshipCollection.findOne({_id:new ObjectId(scholarshipId)})
+  const user = await usersCollection.findOne({email:studentEmail})
+   const existing = await applicationsCollection.findOne({
     scholarshipId,
+    studentEmail
+  });
+  // const application = await applicationsCollection.findOne({scholarshipId,studentEmail,payment_status:'unpaid',})
+  if(!existing){
+    const applicationInfo = {
+    universityName:scholarship?.universityName,
+    scholarshipName:scholarship?.scholarshipName,
+    studentName,
     studentEmail ,
+    scholarshipId,
+    userId:user?._id,
+    scholarshipCategory:scholarship.scholarshipCategory,
+     subjectCategory:scholarship.subjectCategory,
+    universityCity:scholarship.universityCity ,
+    universityCountry:scholarship.universityCountry,
+    degree:scholarship.degree,
+    serviceCharge:scholarship.serviceCharge,
+    amount:0,
+    applicationStatus:'pending',
     payment_status:'unpaid',
-    appliedAt:new Date()
+    appliedAt:new Date(),
+    feedback:""
   }
+
+
   await applicationsCollection.insertOne(applicationInfo) 
-  res.send({success:true})
+  }
+  res.send({success:true,scholarshipName: scholarship?.scholarshipName})
 })
 
 
 
 
-
-
-
-
-    // ===== APPLICATIONS =====
+// ===== APPLICATIONS =====
 //       app.post('/applications', async (req, res) => {
 //         const body = req.body
 //         const result = await applications.insertOne(body)
 //        res.send(result);
 //          });
+  // applications get all 
+  app.get('/applications',verifyFbToken, async (req, res) => {
+    const result = await applicationsCollection.find().toArray()
+    res.send(result);
+     });
 
-
-//       app.get('/applications', async (req, res) => {
-//         const result = await applications.find().toArray()
-//         res.send(result);
-//          });
-
-
-//         app.get('/applications/user/:email', async (req, res) => {
-//         res.send(await applications.find({ userEmail: req.params.email }).toArray());
-//           });
-
-
-//           app.patch('/applications/status/:id', async (req, res) => {
-//       const { status } = req.body;
-//         res.send(await applications.updateOne(
-//          { _id: new ObjectId(req.params.id) },
-//        { $set: { status } }
-//         ));
-//         });
-
-//    app.patch('/applications/status/:id', async (req, res) => {
-// const { status } = req.body;
-// const result = await applications.updateOne(
-// { _id: new ObjectId(req.params.id) },
-// { $set: { status } }
-// );
-// res.send(result);
-// });
+      // applications feedback patch
+     app.patch('/applications/feedback/:id',verifyFbToken, async (req, res) => {
+          const id = req.params.id 
+          const query = {_id:new ObjectId(id)}
+          const { feedback } = req.body;
+          const update = {$set:{feedback}}
+          const result = await applicationsCollection.updateOne(query,update)
+            res.send(result)
+      })
+      // applications status patch
+      app.patch('/applications/status/:id', async (req, res) => {
+      const id = req.params.id 
+      const query = {_id:new ObjectId(id)}
+      const { applicationStatus } = req.body;
+      const update = {$set:{applicationStatus}}
+      const result = await applicationsCollection.updateOne(
+      query,update);
+      res.send(result);
+      });
+      // applications get my applications er jonno
+      app.get('/my-applications/:email',verifyFbToken, async(req,res)=>{
+        const email = req.decoded_email
+        // console.log(email);
+        const query = {studentEmail: email }
+        // console.log(query);
+        const result = await applicationsCollection.find(query).toArray()
+        // same
+        // const result = await applicationsCollection.find({studentEmail:req.decoded_email}).toArray()
+        res.send(result)
+      })
+    
 
 
 
       // reviews
-    //   app.get('/reviews/:scholarshipId' , async(req,res)=>{
-    //     const scholarshipId = req.params.scholarshipId 
-    //     const review = await reviewCollection
-    //  .find({ scholarshipId })
-    //   .toArray();
-    //   res.send(review);
-    //   })
-    // app.post('/reviews', async (req, res) => {
-    //   const body = req.body 
-    //   const result = await reviewCollection.insertOne(body)
-    //   res.send(result);
-    //     });
+      // all reviews
+      app.get('/reviews' , verifyFbToken, async(req,res)=>{ 
+        const result = await reviewsCollection.find().toArray();
+      res.send(result);
+      })
+      // reviews post
+    app.post('/reviews', async (req, res) => {
+      const review = req.body 
+      // const existingReviews = await reviewsCollection.findOne({
+      //   scholarshipId:review.scholarshipId,
+      //   userEmail:review.userEmail
+      // })
+      // if(existingReviews){
+      //   return res.status(400).send({ message: "You already reviewed this scholarship" })
+      // }
+      const result = await reviewsCollection.insertOne(review)
+      res.send(result);
+        });
 
-
-    //  app.get('/reviews/:email', async (req, res) => {
-    //    res.send(await reviews.find({ userEmail: req.params.email }).toArray());
-    //      });
-
+// reviews id get
+     app.get('/reviews/:id',verifyFbToken, async (req, res) => {
+      const id = req.params.id
+      const email = req.decoded_email;
+      console.log(email);
+      const query= {scholarshipId:id}
+      query.userEmail = email
+      const result = await reviewsCollection.find(query).toArray()
+      res.send(result);
+         });
+        //  all reviews theke delete
+     app.delete('/reviews/:id', async (req,res)=>{
+      const id = req.params.id 
+      const query = {_id:new ObjectId(id)}
+      const result = await reviewsCollection.deleteOne(query) 
+      res.send(result)
+     })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
