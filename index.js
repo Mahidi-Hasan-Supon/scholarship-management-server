@@ -318,6 +318,7 @@ app.post('/canceled-payment', async (req,res)=>{
     studentEmail ,
     scholarshipId,
     userId:user?._id,
+    universityImage:scholarship.universityImage,
     scholarshipCategory:scholarship.scholarshipCategory,
      subjectCategory:scholarship.subjectCategory,
     universityCity:scholarship.universityCity ,
@@ -382,7 +383,15 @@ app.post('/canceled-payment', async (req,res)=>{
         // const result = await applicationsCollection.find({studentEmail:req.decoded_email}).toArray()
         res.send(result)
       })
-    
+    // my applications e update er jonno
+    app.patch('/my-applications/:id' , async(req,res)=>{
+      const id = req.params.id
+      const query = {_id:new ObjectId(id)}
+      const updateData = req.body 
+      const update = {$set:updateData}
+     const result = await applicationsCollection.updateOne(query , update) 
+     res.send(result)
+    })
 
 
 
