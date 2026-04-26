@@ -26,10 +26,10 @@ admin.initializeApp({
 // firebase jwttoken 
 
 const verifyFbToken = async (req, res, next) => {
-  // console.log('headers in the middleware',req.headers.authorization);
+  console.log('headers in the middleware',req.headers.authorization);
   const token = req.headers.authorization
   if (!token) {
-    return res.status(401).send({ message: 'unauthorized message' })
+    return res.status(401).send({ message: 'unauthorized message 1' })
   }
   try {
     const idToken = token.split(' ')[1]
@@ -38,7 +38,8 @@ const verifyFbToken = async (req, res, next) => {
     req.decoded_email = decoded.email
     next()
   } catch (err) {
-    return res.status(401).send({ message: 'unauthorized message' })
+    console.log(err);
+    return res.status(401).send({ message: 'unauthorized message 2' })
 
   }
 }
@@ -125,6 +126,20 @@ async function run() {
     })
 
 
+    //  user profile update 
+    app.patch('/update-profile', verifyFbToken, async (req, res) => {
+      const { name, photo } = req.body
+
+      const update = { $set: { name, photo } }
+      const result = await usersCollection.updateOne({ email: req.decoded_email }, update)
+      res.send(result)
+    })
+    // profile get
+    app.get('/profile', verifyFbToken, async (req, res) => {
+      const result = await usersCollection.findOne({ email: req.decoded_email })
+      res.send(result)
+    })
+
     // users role get
     app.get('/users/role/:email', async (req, res) => {
       const email = req.params.email
@@ -137,11 +152,11 @@ async function run() {
     //  role update
     app.patch('/update-role', async (req, res) => {
       console.log(req.body);
-      const {email, role } = req.body;
-      const alreadyExist = await usersCollection.findOne({email})
+      const { email, role } = req.body;
+      const alreadyExist = await usersCollection.findOne({ email })
       console.log(alreadyExist);
-      const update =  { $set: {role}  }
-      const result = await usersCollection.updateOne({email} , update)
+      const update = { $set: { role } }
+      const result = await usersCollection.updateOne({ email }, update)
       res.send(result)
     });
 
@@ -164,13 +179,13 @@ async function run() {
     });
 
     // all scholarship
-    app.get('/scholarship', async (req, res) => {
-      const { limit, skip } = req.query
-      const cursor = scholarshipCollection.find().limit(Number(limit)).skip(Number(skip))
-      const result = await cursor.toArray()
-      const count = await scholarshipCollection.countDocuments()
-      res.send({ result, count })
-    })
+    // app.get('/scholarship', async (req, res) => {
+    //   const { limit, skip } = req.query
+    //   const cursor = scholarshipCollection.find().limit(Number(limit)).skip(Number(skip))
+    //   const result = await cursor.toArray()
+    //   const count = await scholarshipCollection.countDocuments()
+    //   res.send({ result, count })
+    // })
     // details scholarship
     app.get('/scholarship/:id', async (req, res) => {
       const id = req.params.id
@@ -178,6 +193,47 @@ async function run() {
       const result = await scholarshipCollection.findOne(query)
       res.send(result)
     })
+    // search filter by all scholarship 
+    app.get('/scholarships', async (req, res) => {
+      const { search, country, category, limit, skip, sortField, sortOrder } = req.query
+      let query = {}
+      let sort = {}
+      if (search) {
+        query.$or = [
+          { scholarshipName: { $regex: search, $options: "i" } },
+          { universityName: { $regex: search, $options: "i" } },
+          { degree: { $regex: search, $options: "i" } },
+        ];
+      }
+      if (country) {
+        query.universityCountry = { $regex: country, $options: "i" }
+      }
+      if (category) {
+        query.scholarshipCategory = category
+      }
+      // sort 
+      if (sortField) {
+        sort[sortField] = sortOrder === "desc" ? -1 : 1;
+      }
+
+      const cursor = scholarshipCollection.find(query).sort(sort).limit(Number(limit)).skip(Number(skip))
+      const result = await cursor.toArray()
+      // const count = await scholarshipCollection.find(query).toArray() 
+      const count = await scholarshipCollection.countDocuments(query)
+      res.send({ result, count })
+    })
+    // top sccholarship home page e 
+    app.get('/top-scholarships', async (req, res) => {
+      const { sortBy } = req.query;
+      let sort = {};
+      if (sortBy === "fees") {
+        sort.applicationFees = 1
+      } else {
+        sort.postDate = -1
+      }
+      const result = await scholarshipCollection.find().sort(sort).limit(6).toArray();
+        res.send(result);
+    });
 
     // manage scholarship 
     app.get('/manage-scholarship', verifyFbToken, async (req, res) => {
