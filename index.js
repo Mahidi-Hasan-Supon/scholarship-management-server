@@ -16,7 +16,11 @@ app.use(express.json())
 // firebase 
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./student-scholarship-firebase-admin.json");
+// const serviceAccount = require("./student-scholarship-firebase-admin.json");
+// const serviceAccount = require("./firebase-admin-key.json");
+
+const decoded = Buffer.from(process.env.FIREBASE_SERVICE_KEY, 'base64').toString('utf8')
+const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -26,7 +30,7 @@ admin.initializeApp({
 // firebase jwttoken 
 
 const verifyFbToken = async (req, res, next) => {
-  console.log('headers in the middleware',req.headers.authorization);
+  console.log('headers in the middleware', req.headers.authorization);
   const token = req.headers.authorization
   if (!token) {
     return res.status(401).send({ message: 'unauthorized message 1' })
@@ -232,7 +236,7 @@ async function run() {
         sort.postDate = -1
       }
       const result = await scholarshipCollection.find().sort(sort).limit(6).toArray();
-        res.send(result);
+      res.send(result);
     });
 
     // manage scholarship 
